@@ -1,0 +1,778 @@
+Untuk menjadikan sistem ini sebagai **satu pautan web (link)** dengan semua data sedia kosong (*blank template*) bagi kegunaan admin memasukkan data baharu, terdapat dua langkah utama:
+
+---
+
+### Langkah 1: Pilihan Menjadikan Sistem Ini Sebagai Pautan (Link) Percuma & Mudah
+
+Anda boleh hoskan fail HTML ini secara percuma dalam masa 2 minit sahaja tanpa memerlukan sebarang bayaran atau kemahiran pelayan yang rumit. Tiga platform paling disyorkan:
+
+1. **GitHub Pages (Paling Stabil & Standard):**
+* Buka akaun di [GitHub](https://github.com).
+* Buat repositori baharu (*New Repository*) bernama `jadual-port-polis`.
+* Muat naik fail di bawah dan namakannya sebagai **`index.html`**.
+* Pergi ke tab **Settings** $\rightarrow$ **Pages** $\rightarrow$ pada bahagian *Branch*, pilih **main** dan tekan **Save**.
+* Anda akan mendapat pautan kekal seperti: `[https://nama-anda.github.io/jadual-port-polis/](https://nama-anda.github.io/jadual-port-polis/)`.
+
+
+2. **Netlify Drop (Paling Pantas - 30 Saat):**
+* Pergi ke [app.netlify.com/drop](https://app.netlify.com/drop).
+* Simpan kod di bawah dalam satu fail bernama `index.html`.
+* Tarik dan lepas (*drag & drop*) fail tersebut ke laman Netlify.
+* Anda akan terus mendapat satu pautan web rasmi percuma yang boleh dibuka oleh sesiapa sahaja.
+
+
+3. **Vercel / Cloudflare Pages:**
+* Juga menyokong *deployment* percuma dengan kelajuan tinggi dan keselamatan SSL (HTTPS).
+
+
+
+---
+
+### Langkah 2: Kod Templat HTML Lengkap (Data Kosong & Sedia Diisi)
+
+Di bawah adalah fail penuh yang telah dikosongkan semua namanya. Templat pos keselamatan bagi keempat-empat sektor (Butterworth, SPCT, NBCT, PKPP/Dermaga Prai, dan Pejabat Pas) dikekalkan, manakala nama pegawai dan anggota telah dikosongkan untuk pengisian admin.
+
+Sistem ini turut dilengkapi butang **"Simpan / Kemas Kini Data"**, **"Eksport Fail (.json)"**, **"Buka Data (.json)"**, serta fungsi **"Kosongkan Semua Data"**.
+
+Simpan kod ini sebagai **`index.html`**:
+
+```html
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Penugasan Harian Port Polis - Penang Port</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background-color: #ffffff !important;
+        font-size: 11px !important;
+        color: #000000 !important;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+      table {
+        page-break-inside: auto;
+      }
+      tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen">
+
+  <!-- BAR TINDAKAN ATAS (TIDAK DICETAK) -->
+  <header class="no-print sticky top-0 z-40 bg-slate-900 text-white shadow-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="bg-blue-600 text-white p-2 rounded-lg shadow">
+          <i class="fa-solid fa-shield-halved text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold tracking-wide flex items-center gap-2">
+            PORT POLICE PENANG PORT
+            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">Admin Portal</span>
+          </h1>
+          <p class="text-xs text-slate-400">Sistem Penjadualan & Penugasan Harian Keselamatan Pelabuhan</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <input type="file" id="jsonFileInput" accept=".json" class="hidden" onchange="handleFileImport(event)">
+        
+        <!-- Butang Muat Naik JSON -->
+        <button onclick="triggerFileInput()" title="Buka fail data yang telah disimpan sebelum ini" class="bg-amber-600 hover:bg-amber-700 text-white font-medium px-3 py-2 rounded-md transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-folder-open"></i>
+          <span>Buka Data (.json)</span>
+        </button>
+
+        <!-- Butang Simpan / Muat Turun JSON -->
+        <button onclick="exportJSON()" title="Muat turun fail data untuk dihantar kepada pegawai lain" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-2 rounded-md transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Simpan Fail (.json)</span>
+        </button>
+
+        <!-- Butang Pegawai Kanan -->
+        <button onclick="openOfficersModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium px-3 py-2 rounded-md transition flex items-center gap-1.5">
+          <i class="fa-solid fa-user-shield text-blue-400"></i>
+          <span>Pegawai Kanan</span>
+        </button>
+
+        <!-- Butang Kosongkan Semua (Reset) -->
+        <button onclick="clearAllData()" class="bg-slate-800 hover:bg-rose-900/60 text-rose-300 hover:text-white border border-slate-700 font-medium px-3 py-2 rounded-md transition flex items-center gap-1.5" title="Kosongkan semula seluruh borang">
+          <i class="fa-solid fa-trash-can"></i>
+          <span>Kosongkan Borang</span>
+        </button>
+
+        <!-- Butang Cetak / PDF -->
+        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md shadow transition flex items-center gap-1.5">
+          <i class="fa-solid fa-print"></i>
+          <span>Cetak / PDF</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- PANDUAN PENGGUNAAN ADMIN (TIDAK DICETAK) -->
+  <div class="no-print max-w-7xl mx-auto px-4 mt-3">
+    <div class="bg-sky-50 border-l-4 border-sky-500 p-3 rounded-r text-xs text-sky-950 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-sky-600 text-sm"></i>
+        <span><strong>Templat Sedia Diisi:</strong> Semua nama telah dikosongkan. Klik mana-mana kotak pos bertugas untuk memasukkan No. PB & Pangkat. Data disimpan secara automatik dalam pelayar anda dan boleh dieksport ke fail <code>.json</code> untuk dikongsi.</span>
+      </div>
+      <span id="saveStatusIndicator" class="text-emerald-700 font-bold flex items-center gap-1 bg-emerald-100 px-2 py-0.5 rounded">
+        <i class="fa-solid fa-check"></i> Sedia Untuk Input
+      </span>
+    </div>
+  </div>
+
+  <!-- KANDUNGAN BORANG & CETAKAN DOKUMEN -->
+  <main class="max-w-7xl mx-auto px-4 py-4 print:p-0">
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200 print:border-0 print:shadow-none p-6 print:p-0">
+      
+      <!-- KEPALA SURAT (HEADER) -->
+      <div class="text-center pb-4 border-b-2 border-slate-800 mb-4 print:pb-2 print:mb-2">
+        <div class="flex items-center justify-center gap-3 mb-1">
+          <i class="fa-solid fa-anchor text-slate-800 text-2xl print:text-xl"></i>
+          <h2 class="text-xl print:text-lg font-black tracking-wider text-slate-900 uppercase">
+            POLIS PELABUHAN PENANG PORT
+          </h2>
+          <i class="fa-solid fa-shield text-slate-800 text-2xl print:text-xl"></i>
+        </div>
+        <h3 class="text-sm print:text-xs font-bold tracking-widest text-slate-700 uppercase">
+          JADUAL PENUGASAN HARIAN KESELAMATAN KAWASAN
+        </h3>
+
+        <!-- INPUT TARIKH MASIHI & HIJRI -->
+        <div class="mt-2 inline-flex items-center gap-2 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-300 print:border-0 print:p-0">
+          <div class="flex items-center gap-1 text-xs font-bold text-slate-800">
+            <i class="fa-regular fa-calendar-days text-blue-600 no-print"></i>
+            <input type="text" id="headerDateMasihi" class="bg-transparent font-bold border-b border-dashed border-slate-400 focus:outline-none focus:border-blue-600 text-center px-1 placeholder-slate-400" placeholder="Contoh: 05 NOVEMBER 2026 (KHAMIS)" onchange="updateHeaderDate()">
+          </div>
+          <span class="text-slate-400">|</span>
+          <div class="flex items-center gap-1 text-xs font-semibold text-slate-700">
+            <i class="fa-regular fa-moon text-amber-600 no-print"></i>
+            <input type="text" id="headerDateHijri" class="bg-transparent font-semibold border-b border-dashed border-slate-400 focus:outline-none focus:border-blue-600 text-center px-1 placeholder-slate-400" placeholder="Contoh: 25 JAMADILAWWAL 1448 H" onchange="updateHeaderDate()">
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL PEGAWAI KANAN BERTUGAS -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs mb-5 print:mb-3">
+        <div class="flex items-start gap-2">
+          <span class="font-bold text-slate-700 min-w-[135px]">Ketua Polis Pelabuhan:</span>
+          <span id="txt_kpp" class="font-semibold text-slate-900 italic text-slate-400">-- Belum Diisi --</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="font-bold text-slate-700 min-w-[135px]">Pegawai Pentadbiran:</span>
+          <span id="txt_pp" class="font-medium text-slate-900 italic text-slate-400">-- Belum Diisi --</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="font-bold text-slate-700 min-w-[135px]">Pegawai Operasi:</span>
+          <span id="txt_po" class="font-medium text-slate-900 italic text-slate-400">-- Belum Diisi --</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="font-bold text-slate-700 min-w-[135px]">Pentadbiran & Tatatertib:</span>
+          <span id="txt_pt" class="font-medium text-slate-900 italic text-slate-400">-- Belum Diisi --</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="font-bold text-slate-700 min-w-[135px]">Pegawai Ronda Malam:</span>
+          <span id="txt_prm" class="font-medium text-slate-900 italic text-slate-400">-- Belum Diisi --</span>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="font-bold text-slate-700 min-w-[135px]">Sektor Operasi:</span>
+          <span class="font-medium text-slate-700">SPCT, BWCT, NBCT, PKPP & Dermaga</span>
+        </div>
+      </div>
+
+      <!-- SEKSYEN 1: BALAI POLIS BUTTERWORTH -->
+      <section class="mb-5 print:mb-3">
+        <div class="flex justify-between items-center bg-slate-800 text-white px-3 py-1.5 rounded-t-md">
+          <h3 class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-building-shield"></i>
+            1. BALAI POLIS PELABUHAN BUTTERWORTH & CAWANGAN JENAYAH
+          </h3>
+          <span class="text-[11px] text-slate-300">Pegawai Kawasan: <input type="text" id="pk_butterworth" class="bg-slate-700 text-white px-1.5 py-0.5 rounded text-xs border border-slate-600 focus:outline-none" placeholder="Nama Pegawai..." onchange="updateOfficersInline()"></span>
+        </div>
+        <div class="overflow-x-auto border border-t-0 border-slate-300 rounded-b-md">
+          <table class="w-full text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-200 text-slate-800 border-b border-slate-300 font-bold">
+                <th class="py-1 px-2 text-left w-1/4 border-r border-slate-300">PENEMPATAN TUGAS</th>
+                <th class="py-1 px-2 text-center w-1/4 border-r border-slate-300 bg-indigo-50">0000 - 0800 (MALAM)</th>
+                <th class="py-1 px-2 text-center w-1/4 border-r border-slate-300 bg-sky-50">0800 - 1600 (PAGI)</th>
+                <th class="py-1 px-2 text-center w-1/4 bg-amber-50">1600 - 2400 (PETANG)</th>
+              </tr>
+            </thead>
+            <tbody id="table_butterworth_body" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SEKSYEN 2: BALAI POLIS PULAU PINANG (SPCT & PRTU) -->
+      <section class="mb-5 print:mb-3">
+        <div class="flex justify-between items-center bg-slate-800 text-white px-3 py-1.5 rounded-t-md">
+          <h3 class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-ship"></i>
+            2. BALAI POLIS PELABUHAN PULAU PINANG (SPCT) / P.R.T.U
+          </h3>
+          <span class="text-[11px] text-slate-300">Pegawai Kawasan: <input type="text" id="pk_spct" class="bg-slate-700 text-white px-1.5 py-0.5 rounded text-xs border border-slate-600 focus:outline-none" placeholder="Nama Pegawai..." onchange="updateOfficersInline()"></span>
+        </div>
+        <div class="overflow-x-auto border border-t-0 border-slate-300 rounded-b-md">
+          <table class="w-full text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-200 text-slate-800 border-b border-slate-300 font-bold">
+                <th class="py-1 px-2 text-left w-1/4 border-r border-slate-300">PENEMPATAN TUGAS</th>
+                <th class="py-1 px-2 text-center w-1/4 border-r border-slate-300 bg-indigo-50">0000 - 0800 (MALAM)</th>
+                <th class="py-1 px-2 text-center w-1/4 border-r border-slate-300 bg-sky-50">0800 - 1600 (PAGI)</th>
+                <th class="py-1 px-2 text-center w-1/4 bg-amber-50">1600 - 2400 (PETANG)</th>
+              </tr>
+            </thead>
+            <tbody id="table_spct_body" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="page-break"></div>
+
+      <!-- SEKSYEN 3: PANGKALAN KONTENA BUTTERWORTH UTARA (NBCT) -->
+      <section class="mb-5 print:mb-3 print:pt-4">
+        <div class="flex justify-between items-center bg-slate-800 text-white px-3 py-1.5 rounded-t-md">
+          <h3 class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            3. PANGKALAN KONTENA BUTTERWORTH UTARA (NBCT)
+          </h3>
+          <span class="text-[11px] text-slate-300">Pegawai Kawasan: <input type="text" id="pk_nbct" class="bg-slate-700 text-white px-1.5 py-0.5 rounded text-xs border border-slate-600 focus:outline-none" placeholder="Nama Pegawai..." onchange="updateOfficersInline()"></span>
+        </div>
+        <div class="overflow-x-auto border border-t-0 border-slate-300 rounded-b-md">
+          <table class="w-full text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-200 text-slate-800 border-b border-slate-300 font-bold">
+                <th class="py-1 px-2 text-left w-1/4 border-r border-slate-300">PENEMPATAN TUGAS</th>
+                <th class="py-1 px-2 text-center w-1/4 border-r border-slate-300 bg-indigo-50">0000 - 0800 (MALAM)</th>
+                <th class="py-1 px-2 text-center w-1/4 border-r border-slate-300 bg-sky-50">0800 - 1600 (PAGI)</th>
+                <th class="py-1 px-2 text-center w-1/4 bg-amber-50">1600 - 2400 (PETANG)</th>
+              </tr>
+            </thead>
+            <tbody id="table_nbct_body" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SEKSYEN 4: PANGKALAN KARGO PUKAL PRAI (PKPP) / DERMAGA PRAI -->
+      <section class="mb-5 print:mb-3">
+        <div class="flex justify-between items-center bg-slate-800 text-white px-3 py-1.5 rounded-t-md">
+          <h3 class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-dolly"></i>
+            4. PANGKALAN KARGO PUKAL PRAI (PKPP) & DERMAGA PRAI (WHARF)
+          </h3>
+          <span class="text-[11px] text-slate-300">Penyelia Kawasan: <input type="text" id="pk_pkpp" class="bg-slate-700 text-white px-1.5 py-0.5 rounded text-xs border border-slate-600 focus:outline-none" placeholder="Nama Penyelia..." onchange="updateOfficersInline()"></span>
+        </div>
+        <div class="overflow-x-auto border border-t-0 border-slate-300 rounded-b-md">
+          <table class="w-full text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-200 text-slate-800 border-b border-slate-300 font-bold">
+                <th class="py-1 px-2 text-left w-1/4 border-r border-slate-300">PENEMPATAN TUGAS</th>
+                <th class="py-1 px-2 text-center w-1/4 border-r border-slate-300 bg-indigo-50">0000 - 0800 (MALAM)</th>
+                <th class="py-1 px-2 text-center w-1/4 border-r border-slate-300 bg-sky-50">0800 - 1600 (PAGI)</th>
+                <th class="py-1 px-2 text-center w-1/4 bg-amber-50">1600 - 2400 (PETANG)</th>
+              </tr>
+            </thead>
+            <tbody id="table_pkpp_body" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SEKSYEN 5: PENTADBIRAN / PEJABAT PAS (0815 - 1715 HRS) -->
+      <section class="mb-5 print:mb-3">
+        <div class="flex justify-between items-center bg-slate-700 text-white px-3 py-1.5 rounded-t-md">
+          <h3 class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-id-card"></i>
+            5. PENTADBIRAN & PEJABAT PAS (0815 HRS - 1715 HRS)
+          </h3>
+          <span class="text-[11px] text-slate-200">Waktu Pejabat</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3 bg-slate-50 border border-t-0 border-slate-300 rounded-b-md text-xs" id="admin_office_list"></div>
+      </section>
+
+      <!-- SEKSYEN 6: PELEPASAN REHAT, CUTI & STATUS KEKUATAN -->
+      <section class="mb-5 print:mb-3">
+        <div class="bg-slate-700 text-white px-3 py-1.5 rounded-t-md">
+          <h3 class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-bed"></i>
+            6. REKOD HARI REHAT (REST DAY), CUTI TAHUNAN & STATUS KEKUATAN
+          </h3>
+        </div>
+        <div class="p-3 bg-slate-50 border border-t-0 border-slate-300 rounded-b-md text-xs space-y-2">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <div class="p-2 bg-white rounded border border-slate-200">
+              <span class="font-bold text-slate-800 block text-[11px] mb-1 text-rose-700">HARI REHAT (REST DAY)</span>
+              <textarea id="txt_rest_days" class="w-full text-xs p-1 bg-transparent border border-slate-200 focus:ring-1 focus:ring-blue-400 rounded resize-none" rows="3" placeholder="Masukkan No PB anggota bercuti rehat..." onchange="autoSave()"></textarea>
+            </div>
+            <div class="p-2 bg-white rounded border border-slate-200">
+              <span class="font-bold text-slate-800 block text-[11px] mb-1 text-amber-700">CUTI TAHUNAN (AL)</span>
+              <textarea id="txt_annual_leave" class="w-full text-xs p-1 bg-transparent border border-slate-200 focus:ring-1 focus:ring-blue-400 rounded resize-none" rows="3" placeholder="Masukkan No PB anggota cuti tahunan..." onchange="autoSave()"></textarea>
+            </div>
+            <div class="p-2 bg-white rounded border border-slate-200">
+              <span class="font-bold text-slate-800 block text-[11px] mb-1 text-emerald-700">CUTI SAKIT (MC)</span>
+              <textarea id="txt_medical_leave" class="w-full text-xs p-1 bg-transparent border border-slate-200 focus:ring-1 focus:ring-blue-400 rounded resize-none" rows="3" placeholder="Masukkan No PB anggota MC..." onchange="autoSave()"></textarea>
+            </div>
+            <div class="p-2 bg-white rounded border border-slate-200">
+              <span class="font-bold text-slate-800 block text-[11px] mb-1 text-indigo-700">KURSUS / LATIHAN</span>
+              <textarea id="txt_training" class="w-full text-xs p-1 bg-transparent border border-slate-200 focus:ring-1 focus:ring-blue-400 rounded resize-none" rows="3" placeholder="Catatan kursus / latihan menembak..." onchange="autoSave()"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEKSYEN 7: ARAHAN & RUANG PENGESAHAN DOKUMEN -->
+      <section class="border-t-2 border-slate-800 pt-3 text-xs">
+        <h4 class="font-bold text-slate-900 mb-1 flex items-center gap-1">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600 no-print"></i>
+          ARAHAN SEMASA:
+        </h4>
+        <ul class="list-disc list-inside text-[11px] text-slate-700 space-y-0.5 mb-6">
+          <li>Semua anggota dan Pelatih PB dikehendaki menyemak jadual tugas di semua kawasan setiap hari.</li>
+          <li>Mematuhi imbasan cap jari sistem biometrik semasa melapor masuk tugas dan tamat tugas.</li>
+          <li>Sebarang pertukaran giliran kerja dan permohonan lebih masa mestilah melalui kelulusan Pegawai Kawasan / Pegawai Operasi.</li>
+          <li>Semasa giliran bersiap sedia (Standby), anggota boleh diarahkan membantu kerja operasi atau latihan kecergasan.</li>
+        </ul>
+
+        <!-- TANDATANGAN PENGESAHAN -->
+        <div class="flex justify-between items-end pt-4 px-8 text-xs">
+          <div class="text-left">
+            <div class="border-b border-slate-500 w-48 mb-1"></div>
+            <p class="font-bold text-slate-900 uppercase">PEGAWAI BERTUGAS</p>
+            <p class="text-[10px] text-slate-600">Port Police Penang Port</p>
+          </div>
+          <div class="text-right">
+            <p class="text-[11px] font-medium text-slate-700 mb-1">Disahkan Oleh:</p>
+            <div class="h-10"></div>
+            <div class="border-b border-slate-500 w-56 ml-auto mb-1"></div>
+            <p class="font-bold text-slate-900 uppercase" id="sign_kpp_name">( KETUA POLIS PELABUHAN )</p>
+            <p class="text-[10px] text-slate-700 font-semibold uppercase">Ketua Polis Pelabuhan</p>
+            <p class="text-[9px] text-slate-500">Penang Port Sdn. Bhd.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- MODAL EDIT POS / ANGGOTA (NO PRINT) -->
+  <div id="editSlotModal" class="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full border border-slate-200 overflow-hidden">
+      <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center">
+        <h4 class="text-sm font-bold flex items-center gap-2">
+          <i class="fa-solid fa-user-pen text-blue-400"></i>
+          Tetapkan Penugasan Pos
+        </h4>
+        <button onclick="closeEditSlotModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-600 font-semibold mb-1">Pos Kawalan / Sektor:</label>
+          <input type="text" id="slotPosName" class="w-full bg-slate-100 border border-slate-300 rounded p-2 font-bold text-slate-800" readonly>
+        </div>
+        <div>
+          <label class="block text-slate-600 font-semibold mb-1">Syif Penugasan:</label>
+          <input type="text" id="slotShiftName" class="w-full bg-slate-100 border border-slate-300 rounded p-2 text-slate-700" readonly>
+        </div>
+        <div>
+          <label class="block text-slate-700 font-bold mb-1">Nama Anggota / No. PB / Catatan:</label>
+          <input type="text" id="slotValueInput" class="w-full border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded p-2 text-slate-900 font-medium" placeholder="Contoh: KPL. PB 7160 MOHD IMRAN">
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="setSlotEmpty()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-1.5 rounded border border-slate-300">
+            Tanda Tutup (XXXXX)
+          </button>
+          <button type="button" onclick="saveSlotValue()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 rounded shadow">
+            Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDIT PEGAWAI KANAN (NO PRINT) -->
+  <div id="officersModal" class="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full border border-slate-200 overflow-hidden">
+      <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center">
+        <h4 class="text-sm font-bold flex items-center gap-2">
+          <i class="fa-solid fa-users-gear text-blue-400"></i>
+          Tetapkan Nama Pegawai Kanan
+        </h4>
+        <button onclick="closeOfficersModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div class="p-4 space-y-2 text-xs">
+        <div>
+          <label class="block text-slate-700 font-semibold mb-0.5">Ketua Polis Pelabuhan:</label>
+          <input type="text" id="inp_kpp" class="w-full border border-slate-300 rounded p-1.5 placeholder-slate-400" placeholder="Contoh: TUAN MOHD NAZRI BIN AWANG">
+        </div>
+        <div>
+          <label class="block text-slate-700 font-semibold mb-0.5">Pegawai Pentadbiran:</label>
+          <input type="text" id="inp_pp" class="w-full border border-slate-300 rounded p-1.5 placeholder-slate-400" placeholder="Pangkat & Nama...">
+        </div>
+        <div>
+          <label class="block text-slate-700 font-semibold mb-0.5">Pegawai Operasi:</label>
+          <input type="text" id="inp_po" class="w-full border border-slate-300 rounded p-1.5 placeholder-slate-400" placeholder="Pangkat & Nama...">
+        </div>
+        <div>
+          <label class="block text-slate-700 font-semibold mb-0.5">Pegawai Pentadbiran & Tatatertib:</label>
+          <input type="text" id="inp_pt" class="w-full border border-slate-300 rounded p-1.5 placeholder-slate-400" placeholder="Pangkat & Nama...">
+        </div>
+        <div>
+          <label class="block text-slate-700 font-semibold mb-0.5">Pegawai Ronda Malam:</label>
+          <input type="text" id="inp_prm" class="w-full border border-slate-300 rounded p-1.5 placeholder-slate-400" placeholder="Pangkat & Nama...">
+        </div>
+        <div class="pt-2 flex justify-end gap-2">
+          <button onclick="closeOfficersModal()" class="px-3 py-1.5 bg-slate-200 text-slate-700 rounded font-medium">Batal</button>
+          <button onclick="saveOfficersData()" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded shadow">Simpan Data Pegawai</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKRIP LOGIK & STRUKTUR TEMPLAT KOSONG -->
+  <script>
+    // TEMPLAT STRUKTUR KOSONG UNTUK ADMIN KEY IN
+    const EMPTY_TEMPLATE = {
+      headerDateMasihi: "",
+      headerDateHijri: "",
+      officers: {
+        kpp: "",
+        pp: "",
+        po: "",
+        pt: "",
+        prm: "",
+        pk_bw: "",
+        pk_spct: "",
+        pk_nbct: "",
+        pk_pkpp: ""
+      },
+      tables: {
+        butterworth: [
+          { pos: "Penyelia Bertugas", m: "", p: "", ptg: "" },
+          { pos: "Pejabat Pertanyaan", m: "", p: "", ptg: "" },
+          { pos: "Kereta Peronda (1)", m: "", p: "", ptg: "" },
+          { pos: "Pintu Masuk Laluan (1)", m: "", p: "", ptg: "" },
+          { pos: "Lorong Masuk / Prowler", m: "", p: "", ptg: "" },
+          { pos: "Lorong Keluar (2)", m: "", p: "", ptg: "" },
+          { pos: "Lorong Keluar (3)", m: "", p: "", ptg: "" },
+          { pos: "ISPS W6", m: "", p: "", ptg: "" },
+          { pos: "Limbungan Bagan Dalam 1", m: "", p: "", ptg: "" },
+          { pos: "Limbungan Bagan Dalam 2", m: "", p: "", ptg: "" },
+          { pos: "Pondok Polis / Rondaan PSAH", m: "", p: "", ptg: "" },
+          { pos: "P.S.A.H. 3 (Laluan Keluar)", m: "", p: "", ptg: "" },
+          { pos: "Cawangan Jenayah: Penyelia", m: "", p: "", ptg: "" },
+          { pos: "Cawangan Jenayah: Anggota", m: "", p: "", ptg: "" }
+        ],
+        spct: [
+          { pos: "Penyelia Bertugas", m: "", p: "", ptg: "" },
+          { pos: "Pejabat Pertanyaan", m: "", p: "", ptg: "" },
+          { pos: "Pintu Masuk S.P.C.T", m: "", p: "", ptg: "" },
+          { pos: "Pintu Keluar", m: "", p: "", ptg: "" },
+          { pos: "Kaunter Teksi 1 & 2", m: "", p: "", ptg: "" },
+          { pos: "S.P.C.T. (Ketibaan)", m: "", p: "", ptg: "" },
+          { pos: "S.P.C.T. (Berlepas)", m: "", p: "", ptg: "" },
+          { pos: "Glass Door / Prowler", m: "", p: "", ptg: "" },
+          { pos: "Anjung Pelabuhan", m: "", p: "", ptg: "" },
+          { pos: "Pintu Auto Gate", m: "", p: "", ptg: "" },
+          { pos: "Pintu ISPS (Utara)", m: "", p: "", ptg: "" },
+          { pos: "Pintu ISPS (Selatan)", m: "", p: "", ptg: "" },
+          { pos: "Terminal 1 & Terminal 2", m: "", p: "", ptg: "" },
+          { pos: "Penyelia Bertugas P.R.T.U.", m: "", p: "", ptg: "" },
+          { pos: "P.R.T.U. Kawalan", m: "", p: "", ptg: "" },
+          { pos: "Mesin Pengimbas 1, 2, 3, 4", m: "", p: "", ptg: "" }
+        ],
+        nbct: [
+          { pos: "Penyelia Bertugas", m: "", p: "", ptg: "" },
+          { pos: "Pejabat Pas / Pejalan Kaki", m: "", p: "", ptg: "" },
+          { pos: "Kereta Peronda (2)", m: "", p: "", ptg: "" },
+          { pos: "Pintu Masuk Kenderaan", m: "", p: "", ptg: "" },
+          { pos: "Pintu Keluar Kenderaan 1", m: "", p: "", ptg: "" },
+          { pos: "Pintu Keluar Kenderaan 2", m: "", p: "", ptg: "" },
+          { pos: "Laluan Keluar K/Kosong (8)", m: "", p: "", ptg: "" },
+          { pos: "Laluan Keluar K/Kosong (9)", m: "", p: "", ptg: "" }
+        ],
+        pkpp: [
+          { pos: "Penyelia Bertugas P.K.P.P.", m: "", p: "", ptg: "" },
+          { pos: "Lorong Masuk (1)", m: "", p: "", ptg: "" },
+          { pos: "Lorong Keluar (2)", m: "", p: "", ptg: "" },
+          { pos: "Kawalan Kapal DG", m: "", p: "", ptg: "" },
+          { pos: "Pos Kawalan Dermaga Prai (1)", m: "", p: "", ptg: "" },
+          { pos: "Kawalan Dermaga Prai (2)", m: "", p: "", ptg: "" }
+        ]
+      },
+      adminOffice: [
+        { role: "Perjawatan & SAP", val: "" },
+        { role: "Asset & Maintenance", val: "" },
+        { role: "Penyelia Pejabat Pas", val: "" },
+        { role: "Admin & Logistik", val: "" },
+        { role: "Jadual Penugasan", val: "" },
+        { role: "Pejabat Pas (E-vetting)", val: "" },
+        { role: "Pembantu Pejabat Pas 1", val: "" },
+        { role: "Pembantu Pejabat Pas 2", val: "" },
+        { role: "Pembantu Pentadbiran 1", val: "" },
+        { role: "Pembantu Pentadbiran 2", val: "" }
+      ],
+      leaveRecords: {
+        restDays: "",
+        annualLeave: "",
+        medicalLeave: "",
+        training: ""
+      }
+    };
+
+    let appData = {};
+
+    function initApp() {
+      const saved = localStorage.getItem("port_police_blank_system_data");
+      if (saved) {
+        try {
+          appData = JSON.parse(saved);
+        } catch (e) {
+          appData = JSON.parse(JSON.stringify(EMPTY_TEMPLATE));
+        }
+      } else {
+        appData = JSON.parse(JSON.stringify(EMPTY_TEMPLATE));
+      }
+      renderAll();
+    }
+
+    function renderAll() {
+      // Tarikh
+      document.getElementById("headerDateMasihi").value = appData.headerDateMasihi || "";
+      document.getElementById("headerDateHijri").value = appData.headerDateHijri || "";
+
+      // Pegawai Kanan
+      document.getElementById("txt_kpp").innerText = appData.officers.kpp || "-- Belum Diisi --";
+      document.getElementById("txt_pp").innerText = appData.officers.pp || "-- Belum Diisi --";
+      document.getElementById("txt_po").innerText = appData.officers.po || "-- Belum Diisi --";
+      document.getElementById("txt_pt").innerText = appData.officers.pt || "-- Belum Diisi --";
+      document.getElementById("txt_prm").innerText = appData.officers.prm || "-- Belum Diisi --";
+      
+      document.getElementById("pk_butterworth").value = appData.officers.pk_bw || "";
+      document.getElementById("pk_spct").value = appData.officers.pk_spct || "";
+      document.getElementById("pk_nbct").value = appData.officers.pk_nbct || "";
+      document.getElementById("pk_pkpp").value = appData.officers.pk_pkpp || "";
+
+      document.getElementById("sign_kpp_name").innerText = appData.officers.kpp ? `( ${appData.officers.kpp} )` : "( KETUA POLIS PELABUHAN )";
+
+      // Jadual-Jadual Pos
+      renderSectionTable("butterworth", "table_butterworth_body");
+      renderSectionTable("spct", "table_spct_body");
+      renderSectionTable("nbct", "table_nbct_body");
+      renderSectionTable("pkpp", "table_pkpp_body");
+
+      // Pejabat Pas
+      renderAdminOffice();
+
+      // Cuti & Pelepasan
+      document.getElementById("txt_rest_days").value = appData.leaveRecords.restDays || "";
+      document.getElementById("txt_annual_leave").value = appData.leaveRecords.annualLeave || "";
+      document.getElementById("txt_medical_leave").value = appData.leaveRecords.medicalLeave || "";
+      document.getElementById("txt_training").value = appData.leaveRecords.training || "";
+    }
+
+    function renderSectionTable(sectionKey, tableBodyId) {
+      const tbody = document.getElementById(tableBodyId);
+      tbody.innerHTML = "";
+      const rows = appData.tables[sectionKey] || [];
+
+      rows.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-200";
+
+        const formatSlot = (val) => {
+          if (!val || val.trim() === "") return `<span class="text-slate-300 italic text-[11px]">+ Klik untuk isi</span>`;
+          if (val.includes("XXXX")) return `<span class="text-slate-400 font-mono tracking-wider text-[10px]">XXXXXXXXXXXXXXXX</span>`;
+          return `<span class="font-bold text-slate-800">${val}</span>`;
+        };
+
+        tr.innerHTML = `
+          <td class="py-1.5 px-2 font-medium text-slate-900 border-r border-slate-300 bg-slate-50/50">${row.pos}</td>
+          <td class="py-1.5 px-2 text-center border-r border-slate-300 cursor-pointer hover:bg-indigo-100/50" onclick="openEditSlotModal('${sectionKey}', ${idx}, 'm', '${row.pos}', '0000 - 0800 (Malam)')">
+            ${formatSlot(row.m)}
+          </td>
+          <td class="py-1.5 px-2 text-center border-r border-slate-300 cursor-pointer hover:bg-sky-100/50" onclick="openEditSlotModal('${sectionKey}', ${idx}, 'p', '${row.pos}', '0800 - 1600 (Pagi)')">
+            ${formatSlot(row.p)}
+          </td>
+          <td class="py-1.5 px-2 text-center cursor-pointer hover:bg-amber-100/50" onclick="openEditSlotModal('${sectionKey}', ${idx}, 'ptg', '${row.pos}', '1600 - 2400 (Petang)')">
+            ${formatSlot(row.ptg)}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderAdminOffice() {
+      const container = document.getElementById("admin_office_list");
+      container.innerHTML = "";
+      (appData.adminOffice || []).forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "p-1.5 bg-white rounded border border-slate-200";
+        div.innerHTML = `
+          <span class="text-slate-500 block text-[10px] uppercase font-bold">${item.role}</span>
+          <input type="text" class="w-full text-xs font-semibold text-slate-800 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-blue-600 mt-0.5" placeholder="Pangkat, No PB & Nama..." value="${item.val || ''}" onchange="updateAdminOffice(${index}, this.value)">
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function updateAdminOffice(index, value) {
+      appData.adminOffice[index].val = value;
+      autoSave();
+    }
+
+    let currentEdit = { section: null, index: null, shiftKey: null };
+
+    function openEditSlotModal(section, index, shiftKey, posName, shiftTitle) {
+      currentEdit = { section, index, shiftKey };
+      document.getElementById("slotPosName").value = posName;
+      document.getElementById("slotShiftName").value = shiftTitle;
+      document.getElementById("slotValueInput").value = appData.tables[section][index][shiftKey] || "";
+      document.getElementById("editSlotModal").classList.remove("hidden");
+      document.getElementById("slotValueInput").focus();
+    }
+
+    function closeEditSlotModal() {
+      document.getElementById("editSlotModal").classList.add("hidden");
+    }
+
+    function setSlotEmpty() {
+      document.getElementById("slotValueInput").value = "XXXXXXXXXXXXXXXXXXXX";
+      saveSlotValue();
+    }
+
+    function saveSlotValue() {
+      if (currentEdit.section !== null && currentEdit.index !== null) {
+        const val = document.getElementById("slotValueInput").value.trim();
+        appData.tables[currentEdit.section][currentEdit.index][currentEdit.shiftKey] = val;
+        closeEditSlotModal();
+        renderAll();
+        autoSave();
+      }
+    }
+
+    function openOfficersModal() {
+      document.getElementById("inp_kpp").value = appData.officers.kpp || "";
+      document.getElementById("inp_pp").value = appData.officers.pp || "";
+      document.getElementById("inp_po").value = appData.officers.po || "";
+      document.getElementById("inp_pt").value = appData.officers.pt || "";
+      document.getElementById("inp_prm").value = appData.officers.prm || "";
+      document.getElementById("officersModal").classList.remove("hidden");
+    }
+
+    function closeOfficersModal() {
+      document.getElementById("officersModal").classList.add("hidden");
+    }
+
+    function saveOfficersData() {
+      appData.officers.kpp = document.getElementById("inp_kpp").value.trim();
+      appData.officers.pp = document.getElementById("inp_pp").value.trim();
+      appData.officers.po = document.getElementById("inp_po").value.trim();
+      appData.officers.pt = document.getElementById("inp_pt").value.trim();
+      appData.officers.prm = document.getElementById("inp_prm").value.trim();
+      closeOfficersModal();
+      renderAll();
+      autoSave();
+    }
+
+    function updateOfficersInline() {
+      appData.officers.pk_bw = document.getElementById("pk_butterworth").value;
+      appData.officers.pk_spct = document.getElementById("pk_spct").value;
+      appData.officers.pk_nbct = document.getElementById("pk_nbct").value;
+      appData.officers.pk_pkpp = document.getElementById("pk_pkpp").value;
+      autoSave();
+    }
+
+    function updateHeaderDate() {
+      appData.headerDateMasihi = document.getElementById("headerDateMasihi").value;
+      appData.headerDateHijri = document.getElementById("headerDateHijri").value;
+      autoSave();
+    }
+
+    function autoSave() {
+      appData.leaveRecords = {
+        restDays: document.getElementById("txt_rest_days").value,
+        annualLeave: document.getElementById("txt_annual_leave").value,
+        medicalLeave: document.getElementById("txt_medical_leave").value,
+        training: document.getElementById("txt_training").value
+      };
+      localStorage.setItem("port_police_blank_system_data", JSON.stringify(appData));
+      
+      const indicator = document.getElementById("saveStatusIndicator");
+      indicator.innerHTML = `<i class="fa-solid fa-check"></i> Data Disimpan`;
+      indicator.className = "text-emerald-700 font-bold flex items-center gap-1 bg-emerald-100 px-2 py-0.5 rounded";
+    }
+
+    function exportJSON() {
+      autoSave();
+      const jsonString = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+      const downloadAnchor = document.createElement("a");
+      let cleanDate = (appData.headerDateMasihi || "Harian").replace(/[^a-zA-Z0-9]/g, "_");
+      downloadAnchor.setAttribute("href", jsonString);
+      downloadAnchor.setAttribute("download", `Penugasan_Port_Polis_${cleanDate}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function triggerFileInput() {
+      document.getElementById("jsonFileInput").click();
+    }
+
+    function handleFileImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.tables && imported.officers) {
+            appData = imported;
+            localStorage.setItem("port_police_blank_system_data", JSON.stringify(appData));
+            renderAll();
+            alert("Data penugasan berjaya dimuat naik ke dalam sistem!");
+          } else {
+            alert("Format fail JSON tidak sah.");
+          }
+        } catch (err) {
+          alert("Gagal membaca fail JSON.");
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+
+    function clearAllData() {
+      if (confirm("Adakah anda pasti mahu mengosongkan semua data penugasan untuk memulakan hari yang baharu?")) {
+        appData = JSON.parse(JSON.stringify(EMPTY_TEMPLATE));
+        localStorage.setItem("port_police_blank_system_data", JSON.stringify(appData));
+        renderAll();
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>
+
+```
